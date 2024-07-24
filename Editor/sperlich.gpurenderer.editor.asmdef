@@ -1,7 +1,9 @@
 {
-    "name": "GPURender",
+    "name": "sperlich.gpurenderer.editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:04e3619e83e869a4fa86b96211d037cb"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

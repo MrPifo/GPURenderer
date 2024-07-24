@@ -1,6 +1,6 @@
 {
-  "name": "com.sperlich.gpurender",
-  "version": "1.0.0",
+  "name": "com.sperlich.gpurenderer",
+  "version": "1.0.1",
   "displayName": "GPURenderer",
   "description": "This package adds support for auto GPU-Instancing.",
   "unity": "2022.3",
@@ -10,13 +10,5 @@
   "licensesUrl": "",
   "dependencies": {
     "com.unity.render-pipelines.universal": "14.0.11"
- },
- "keywords": [
-    
-  ],
-  "author": {
-    "name": "Lion Sperlich",
-    "email": "julian@sperlich.at",
-    "url": "https://www.sperlich.at"
   }
 }
