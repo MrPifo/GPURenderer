@@ -1,6 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,7 +20,9 @@ namespace Sperlich.GPURender {
 				if(_instance == null) {
 					var obj = Object.FindAnyObjectByType<GPURenderEditorInstance>(FindObjectsInactive.Include);
 					if (obj == null) {
+#if UNITY_EDITOR
 						_instance = CreateSceneViewInstance();
+#endif
 					} else {
 						_instance = obj.GetComponent<GPURenderEditorInstance>();
 					}
@@ -66,6 +67,10 @@ namespace Sperlich.GPURender {
 			RenderContext(default, null);
 		}
 		public static void Clear() {
+			foreach(var coll in Collections.Keys.ToList()) {
+				ClearCollection(coll);
+			}
+
 			LastGivenID = 0;
 			Collections.Clear();
 			RenderBlocks.Clear();
@@ -73,11 +78,13 @@ namespace Sperlich.GPURender {
 		}
 		public static void ClearCollection(string collection) {
 			if(Collections.ContainsKey(collection)) {
-				foreach(IRender render in Collections[collection]) {
+				foreach(IRender render in Collections.Values.SelectMany(l => l).ToList()) {
 					Unsubscribe(render);
 				}
 
-				Collections.Remove(collection);
+				if (Collections.ContainsKey(collection)) {
+					Collections.Remove(collection);
+				}
 			}
 		}
 		public static void Subscribe(IRender instance) => Subscribe(instance, true);
