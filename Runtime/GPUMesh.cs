@@ -5,7 +5,7 @@ namespace Sperlich.GPURender {
 
 		public bool IsStatic { get; set; }
 		public bool IsRendering { get; set; }
-		public string Collection { get; set; }
+		public Collection Collection { get; set; }
 		public int InstanceID { get; set; } = GPURender.GenerateUniqueID();
 		public int BatchID { get; set; }
 
@@ -15,12 +15,12 @@ namespace Sperlich.GPURender {
 		public GPUMesh(string name = "") : base(name) {
 
 		}
-		public GPUMesh(GameObject obj, string collection = null) : base(obj.transform, obj == null ? "" : obj.name) {
+		public GPUMesh(GameObject obj, Collection collection = default) : base(obj.transform, obj == null ? "" : obj.name) {
 			if(obj == null) {
 				throw new System.ArgumentNullException(nameof(obj));
 			}
 
-			Collection = collection ?? null;
+			Collection = collection;
 			if (obj.transform.TryGetRenderers(out MeshRenderer render, out MeshFilter filter)) {
 				MeshSet = new(filter.sharedMesh, render.sharedMaterials, obj.layer);
 				MeshSet.ThrowErrorIfInvalid();
@@ -28,8 +28,8 @@ namespace Sperlich.GPURender {
 				this.Enable();
 			}
 		}
-		public GPUMesh(Component comp, string collection = null) : this(comp.gameObject, collection) { }
-		public GPUMesh(MeshRenderer render, MeshFilter filter, int layer, string collection = null) : base(filter == null ? "" : filter.name) {
+		public GPUMesh(Component comp, Collection collection = default) : this(comp.gameObject, collection) { }
+		public GPUMesh(MeshRenderer render, MeshFilter filter, int layer, Collection collection = default) : base(filter == null ? "" : filter.name) {
 			if (render == null) {
 				throw new System.ArgumentNullException(nameof(render));
 			}
@@ -37,21 +37,21 @@ namespace Sperlich.GPURender {
 				throw new System.ArgumentNullException(nameof(filter));
 			}
 
-			Collection = collection ?? null;
+			Collection = collection;
 			MeshSet = new(filter.sharedMesh, render.sharedMaterials, layer);
 			MeshSet.ThrowErrorIfInvalid();
 
 			this.Enable();
 		}
-		public GPUMesh(Mesh mesh, Material[] materials, int layer, string collection = null, string name = "") : base(name) {
-			Collection = collection ?? null;
+		public GPUMesh(Mesh mesh, Material[] materials, int layer, Collection collection = default, string name = "") : base(name) {
+			Collection = collection;
 			MeshSet = new(mesh, materials, layer);
 			MeshSet.ThrowErrorIfInvalid();
 
 			this.Enable();
 		}
-		public GPUMesh(MeshSet set, string collection = null, string name = "") : base(name) {
-			Collection = collection ?? null;
+		public GPUMesh(MeshSet set, Collection collection = default, string name = "") : base(name) {
+			Collection = collection;
 			MeshSet = set;
 			MeshSet.ThrowErrorIfInvalid();
 

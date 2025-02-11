@@ -2,7 +2,8 @@
     "name": "sperlich.gpurenderer.editor",
     "rootNamespace": "",
     "references": [
-        "GUID:04e3619e83e869a4fa86b96211d037cb"
+        "GUID:04e3619e83e869a4fa86b96211d037cb",
+        "GUID:f562e04f4e077f142b583fe1718366c1"
     ],
     "includePlatforms": [
         "Editor"

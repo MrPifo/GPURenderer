@@ -13,12 +13,12 @@ namespace Sperlich.GPURender {
 		public static void Disable(this IRender render) {
 			GPURender.Unsubscribe(render);
 		}
-		public static GPUMesh CreateRenderer(this GameObject obj, bool autoEnable = true) => obj.CreateRenderer(null, autoEnable);
-		public static GPUMesh CreateRenderer(this GameObject obj, string collection, bool autoEnable = true) {
+		public static GPUMesh CreateRenderer(this GameObject obj, bool autoEnable = true) => obj.CreateRenderer(default, autoEnable);
+		public static GPUMesh CreateRenderer(this GameObject obj, Collection collection, bool autoEnable = true) {
 			return obj.transform.CreateRenderer(collection, autoEnable);
 		}
-		public static GPUMesh CreateRenderer(this Component comp, bool autoEnable = true) => comp.CreateRenderer(null, autoEnable);
-		public static GPUMesh CreateRenderer(this Component comp, string collection, bool autoEnable = true) {
+		public static GPUMesh CreateRenderer(this Component comp, bool autoEnable = true) => comp.CreateRenderer(default, autoEnable);
+		public static GPUMesh CreateRenderer(this Component comp, Collection collection, bool autoEnable = true) {
 			if (comp.TryGetRenderers(out MeshRenderer render, out MeshFilter filter) == false) {
 				Debug.LogError($"ERROR: GameObject {comp.name} is missing either MeshRenderer or MeshFilter.");
 				return null;
@@ -79,7 +79,7 @@ namespace Sperlich.GPURender {
 				GPURender.Subscribe(render);
 			}
 		}
-		public static void SwapCollection(this IRender render, string newCollection) {
+		public static void SwapCollection(this IRender render, Collection newCollection) {
 			render.Collection = newCollection;
 
 			if (render.IsRendering) {
@@ -87,6 +87,38 @@ namespace Sperlich.GPURender {
 			}
 
 			GPURender.Subscribe(render);
+		}
+		public static void SwapMaterials(this IMeshRenderInfo info, Material[] materials) {
+			IRender render = (IRender)info;
+			bool wasRendering = render.IsRendering;
+			if (render.IsRendering) {
+				GPURender.Unsubscribe(render);
+			}
+
+			info.MeshSet = new MeshSet(info.MeshSet) {
+				materials = materials
+			};
+
+			if (wasRendering) {
+				GPURender.Subscribe(render);
+			}
+		}
+		public static void SwapMaterials(this IMeshRenderInfo info, Material material, int index) {
+			IRender render = (IRender)info;
+			bool wasRendering = render.IsRendering;
+			if (render.IsRendering) {
+				GPURender.Unsubscribe(render);
+			}
+
+			Material[] mats = info.MeshSet.materials;
+			mats[index] = material;
+			info.MeshSet = new MeshSet(info.MeshSet) {
+				materials = mats
+			};
+
+			if (wasRendering) {
+				GPURender.Subscribe(render);
+			}
 		}
 	}
 }

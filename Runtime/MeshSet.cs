@@ -31,6 +31,11 @@ namespace Sperlich.GPURender {
 			this.materials = materials;
 			this.layer = layer;
 		}
+		public MeshSet(MeshSet meshSet) {
+			this.mesh = meshSet.mesh;
+			this.materials = meshSet.materials;
+			this.layer = meshSet.layer;
+		}
 
 		public void ThrowErrorIfInvalid() {
 			if (mesh == null) {

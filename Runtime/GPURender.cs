@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Rendering;
 
 namespace Sperlich.GPURender {
 	public class GPURender {
-
+		
 		internal static string playMode;
 		internal static List<RenderBlock> RenderBlocks = new();
 		internal static Dictionary<IRender, RenderBlock[]> RenderBlockLookup = new();
-		internal static Dictionary<string, List<IRender>> Collections = new();
+		internal static Dictionary<Collection, List<IRender>> Collections = new();
 
 		private static int LastGivenID { get; set; }
 		private static GPURenderEditorInstance _instance;
@@ -33,7 +34,12 @@ namespace Sperlich.GPURender {
 		}
 		private static System.Random Randomizer { get; set; } = new();
 		private static System.Diagnostics.Stopwatch RenderWatch { get; set; } = new();
-		public static string DefaultCollection = "Default";
+		public static Collection DefaultCollection = 0;
+
+		public static UnityEvent OnCollectionListChanged { get; set; }
+		public static UnityEvent<Collection> OnCollectionAdded { get; set; }
+		public static UnityEvent<Collection> OnCollectionRemoved { get; set; }
+		public static UnityEvent<Collection> OnCollectionChanged { get; set; }
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		public static void RuntimeInit() {
@@ -41,6 +47,10 @@ namespace Sperlich.GPURender {
 			Clear();
 			RenderPipelineManager.beginContextRendering -= RenderContext;
 			RenderPipelineManager.beginContextRendering += RenderContext;
+			OnCollectionAdded = new();
+			OnCollectionRemoved = new();
+			OnCollectionListChanged = new();
+			OnCollectionChanged = new();
 		}
 		
 #if UNITY_EDITOR
@@ -51,6 +61,10 @@ namespace Sperlich.GPURender {
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeChanged;
 			UnityEditor.EditorApplication.playModeStateChanged += PlayModeChanged;
 			CheckDestroyAndCreateInstance();
+			OnCollectionAdded = new();
+			OnCollectionRemoved = new();
+			OnCollectionListChanged = new();
+			OnCollectionChanged = new();
 		}
 		static void PlayModeChanged(UnityEditor.PlayModeStateChange mode) {
 			if (mode == UnityEditor.PlayModeStateChange.ExitingPlayMode) {
@@ -76,7 +90,7 @@ namespace Sperlich.GPURender {
 			RenderBlocks.Clear();
 			RenderBlockLookup.Clear();
 		}
-		public static void ClearCollection(string collection) {
+		public static void ClearCollection(Collection collection) {
 			if(Collections.ContainsKey(collection)) {
 				foreach(IRender render in Collections.Values.SelectMany(l => l).ToList()) {
 					Unsubscribe(render);
@@ -84,6 +98,9 @@ namespace Sperlich.GPURender {
 
 				if (Collections.ContainsKey(collection)) {
 					Collections.Remove(collection);
+
+					OnCollectionRemoved.Invoke(collection);
+					OnCollectionListChanged.Invoke();
 				}
 			}
 		}
@@ -97,23 +114,37 @@ namespace Sperlich.GPURender {
 				IMatrix matrix = instance.IMatrix;
 				if (buildRenderData) {
 					instance.RenderData = meshData.MeshSet.GetRenderData(matrix.Matrix);
+					bool missingGPUInstancing = false;
+
+					foreach(SubMeshRenderData d in instance.RenderData) {
+						if(d.batch.material.enableInstancing == false) {
+							Debug.LogError($"The following Material needs to enable GPU-Instancing: {d.batch.material.name}");
+							missingGPUInstancing = true;
+						}
+					}
+
+					if(missingGPUInstancing) {
+						return;
+					}
 				}
 			}
 
-			if(string.IsNullOrEmpty(instance.Collection)) {
-				instance.Collection = DefaultCollection;
-			}
 			if (Collections.ContainsKey(instance.Collection) == false) {
 				Collections.Add(instance.Collection, new());
+
+				OnCollectionAdded.Invoke(instance.Collection);
+				OnCollectionListChanged.Invoke();
 			}
 
 			Collections[instance.Collection].Add(instance);
 			RenderBlockLookup.Add(instance, new RenderBlock[instance.RenderData.Length]);
 			AddToQueue(instance);
+
+			OnCollectionChanged.Invoke(instance.Collection);
 		}
 		public static void Unsubscribe(IRender instance) {
 			if (RenderBlockLookup.ContainsKey(instance)) {
-				string collection = string.IsNullOrEmpty(instance.Collection) ? DefaultCollection : instance.Collection;
+				Collection collection = instance.Collection;
 				foreach(var block in RenderBlockLookup[instance]) {
 					block.Remove(instance.InstanceID);
 
@@ -124,8 +155,13 @@ namespace Sperlich.GPURender {
 
 				RenderBlockLookup.Remove(instance);
 				Collections[collection].Remove(instance);
+				OnCollectionChanged.Invoke(instance.Collection);
+
 				if (Collections[collection].Count == 0) {
 					Collections.Remove(collection);
+
+					OnCollectionRemoved.Invoke(collection);
+					OnCollectionListChanged.Invoke();
 				}
 				instance.IsRendering = false;
 			}
@@ -147,6 +183,12 @@ namespace Sperlich.GPURender {
 		#endregion
 
 		static void RenderContext(ScriptableRenderContext context, List<Camera> cams) {
+#if UNITY_EDITOR
+			if(UnityEditor.EditorApplication.isPaused) {
+				return;
+			}
+#endif
+
 			RenderWatch.Restart();
 			CheckDirty();
 			UpdateTime = RenderTime = (float)RenderWatch.Elapsed.TotalMilliseconds;
@@ -161,11 +203,10 @@ namespace Sperlich.GPURender {
 		}
 		static void CheckDirty() {
 			foreach(var value in RenderBlockLookup.Keys) {
-				if (value.IsStatic) continue;
-
-
-				if(value.IMatrix.IsDirty) {
-					RefreshInstance(value);
+				if (value.IMatrix.IsDirty) {
+					if (value.IsRendering) {
+						RefreshInstance(value);
+					}
 				}
 			}
 		}
