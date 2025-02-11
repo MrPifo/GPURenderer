@@ -1,11 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Sperlich.UIToolkit;
-using System;
 
 namespace Sperlich.GPURender {
 	[CustomEditor(typeof(GPURender))]

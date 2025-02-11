@@ -1,4 +1,3 @@
-using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 
@@ -7,7 +6,6 @@ namespace Sperlich.GPURender {
 	public class RenderMesh : MonoBehaviour, IRender, IMeshRenderInfo, IMatrix {
 
 		[SerializeField]
-		[OnValueChanged("InspectorChangeCollection")]
 		private Collection _collection;
 		public bool isStatic;
 		public bool includeChildren;
@@ -99,11 +97,6 @@ namespace Sperlich.GPURender {
 		public void SetCollection(Collection collection) {
 			if (MeshSet.IsValid && IsRendering) {
 				this.SwapCollection(collection);
-			}
-		}
-		public void InspectorChangeCollection() {
-			if(IsRendering && MeshSet.IsValid) {
-				this.SwapCollection(_collection);
 			}
 		}
 
