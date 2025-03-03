@@ -124,13 +124,15 @@ namespace Sperlich.GPURender {
 				t.UpdateTransform();
 			}
 
-			IsDirty = true;
+			SetDirty(false);
 		}
-		public void SetAllDirty() {
-			IsDirty = true;
+		public void SetDirty(bool includeChildren = false) {
+			GPURender.SetDirty(this);
 
-			foreach(ITransform t in Children) {
-				t.SetAllDirty();
+			if (includeChildren) {
+				foreach (ITransform t in Children) {
+					t.SetDirty(includeChildren);
+				}
 			}
 		}
 

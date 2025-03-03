@@ -11,6 +11,7 @@ namespace Sperlich.GPURender {
 		internal static List<RenderBlock> RenderBlocks = new();
 		internal static Dictionary<IRender, RenderBlock[]> RenderBlockLookup = new();
 		internal static Dictionary<Collection, List<IRender>> Collections = new();
+		internal static HashSet<ITransform> DirtyList = new();
 
 		private static int LastGivenID { get; set; }
 		private static GPURenderEditorInstance _instance;
@@ -180,6 +181,12 @@ namespace Sperlich.GPURender {
 			}
 			return LastGivenID;
 		}
+		public static void SetDirty(ITransform transform) {
+			if(transform.IsDirty == false && DirtyList.Contains(transform) == false) {
+				transform.IsDirty = true;
+				DirtyList.Add(transform);
+			}
+		}
 		#endregion
 
 		static void RenderContext(ScriptableRenderContext context, List<Camera> cams) {
@@ -202,13 +209,15 @@ namespace Sperlich.GPURender {
 			RenderTime = (float)RenderWatch.Elapsed.TotalMilliseconds;
 		}
 		static void CheckDirty() {
-			foreach(var value in RenderBlockLookup.Keys) {
-				if (value.IMatrix.IsDirty) {
-					if (value.IsRendering) {
-						RefreshInstance(value);
-					}
+			foreach(ITransform transform in DirtyList) {
+				var renderer = (IRender)transform;
+
+				if (renderer.IsRendering) {
+					RefreshInstance(renderer);
 				}
 			}
+
+			DirtyList.Clear();
 		}
 
 		static void AddToQueue(IRender instance) {

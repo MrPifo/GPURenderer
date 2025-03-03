@@ -13,7 +13,7 @@ namespace Sperlich.GPURender {
 		public Matrix4x4 Matrix { get; set; }
 
 		public void UpdateTransform();
-		public void SetAllDirty();
+		public void SetDirty(bool includeChildren = false);
 		public void SetParent(ITransform parent, bool keepTransform);
 	}
 }
