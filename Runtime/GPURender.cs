@@ -59,6 +59,7 @@ namespace Sperlich.GPURender {
 		public static void EditorInit() {
 			playMode = "Editor";
 			RenderPipelineManager.beginContextRendering -= RenderContext;
+			RenderPipelineManager.beginContextRendering += RenderContext;
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeChanged;
 			UnityEditor.EditorApplication.playModeStateChanged += PlayModeChanged;
 			CheckDestroyAndCreateInstance();
@@ -73,6 +74,7 @@ namespace Sperlich.GPURender {
 				Clear();
 				CheckDestroyAndCreateInstance();
 				RenderPipelineManager.beginContextRendering -= RenderContext;
+				RenderPipelineManager.beginContextRendering += RenderContext;
 			}
 		}
 #endif
@@ -191,7 +193,7 @@ namespace Sperlich.GPURender {
 
 		static void RenderContext(ScriptableRenderContext context, List<Camera> cams) {
 #if UNITY_EDITOR
-			if(UnityEditor.EditorApplication.isPaused) {
+			if(UnityEditor.EditorApplication.isPaused || UnityEditorInternal.InternalEditorUtility.isApplicationActive == false) {
 				return;
 			}
 #endif

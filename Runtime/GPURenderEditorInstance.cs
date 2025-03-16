@@ -5,7 +5,7 @@ using UnityEngine;
 public class GPURenderEditorInstance : MonoBehaviour {
 
 	void Update() {
-		GPURender.Render();
+		//GPURender.Render();
 	}
 
 }

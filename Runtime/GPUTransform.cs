@@ -71,12 +71,7 @@ namespace Sperlich.GPURender {
 				return _localMatrix;
 			}
 			set {
-				_localMatrix = value;
-				_localPos = value.GetPosition();
-				_localRot = value.rotation;
-				_localScale = value.lossyScale;
-
-				UpdateTransform();
+				SetMatrix(value);
 			}
 		}
 		public int MatrixIndex { get; internal set; } = -1;
@@ -110,6 +105,20 @@ namespace Sperlich.GPURender {
 			} else {
 				Parent = parent;
 			}
+		}
+		public void SetTranslation(Transform src) {
+			SetMatrix(src.localToWorldMatrix);
+		}
+		public void SetTranslation(Vector3 pos, Quaternion rot, Vector3 scale) {
+			SetMatrix(Matrix4x4.TRS(pos, rot, scale));
+		}
+		public void SetMatrix(Matrix4x4 matrix) {
+			_localMatrix = matrix;
+			_localPos = matrix.GetPosition();
+			_localRot = matrix.rotation;
+			_localScale = matrix.lossyScale;
+
+			UpdateTransform();
 		}
 		public void UpdateTransform() {
 			var localMatrix = _localMatrix;
